@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="v1.3.0"
+VERSION="v1.3.1"
 
 # uname -s, uname -m
 # Deb 32: Linux i686
