@@ -4,12 +4,12 @@ manifests:
     platform:
       architecture: amd64
       os: linux
-  - image: ${IMAGE_PREFIX}:${TAG}-armv6
+  - image: ${IMAGE_PREFIX}:${TAG}-arm32v6
     platform:
       architecture: arm
       variant: v6
       os: linux
-  - image: ${IMAGE_PREFIX}:${TAG}-armv7
+  - image: ${IMAGE_PREFIX}:${TAG}-arm32v7
     platform:
       architecture: arm
       variant: v7
