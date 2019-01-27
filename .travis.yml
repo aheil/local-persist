@@ -27,6 +27,7 @@ jobs:
       stage: build and deploy
       script:
         - echo docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$GOARCH --build-arg GOARM=$GOARM .
+        - docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$GOARCH --build-arg GOARM=$GOARM .
       after_success:
         - |
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USER" --password-stdin
