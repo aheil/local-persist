@@ -62,8 +62,8 @@ jobs:
     - stage: manifest
       if: branch = master OR tag = true
       script:
-        - TAG=${TRAVIS_TAG:-latest}
-        - IMAGE_PREFIX="$DOCKER_USER/docker-local-persist-volume-plugin"
+        - export TAG=${TRAVIS_TAG:-latest}
+        - export IMAGE_PREFIX=$DOCKER_USER/docker-local-persist-volume-plugin
         - envsubst < manifest.yml > manifest.yml
         - echo "$DOCKER_PASSWORD" | docker login --username "${DOCKER_USER}" --password-stdin
         - curl -fsSL https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64 > ./manifest-tool
