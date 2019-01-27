@@ -8,22 +8,73 @@ services:
 go:
   - 1.5
 
-before_install:
-  - sudo apt-get update
-  - curl https://glide.sh/get | sh
+jobs:
+  include:
+    - stage: test
+      before_install:
+        - curl https://glide.sh/get | sed 's+get TAG https://glide.sh/version+TAG=v0.12.3+' | sh
+      install:
+        - glide install -v
+      before_script:
+        - docker version
+        - make binary-linux-amd64
+        - chmod +x bin/linux/amd64/local-persist
+        - sudo ./bin/linux/amd64/local-persist &
+      script:
+        - ./scripts/integration.sh
+        - make test
 
-install:
-  - glide install -v
+    - &deploy-stage
+      stage: build and deploy
+      script:
+        - docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$GO_ARCH --build-arg GOARM=$GOARM .
+      after_success:
+        - |
+          echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USER" --password-stdin
+          if [ "$TRAVIS_BRANCH" == "master" ]; then
+            docker tag local-persist:$DOCKER_ARCH $DOCKER_USER/docker-local-persist-volume-plugin:latest-$DOCKER_ARCH
+            docker push $DOCKER_USER/docker-local-persist-volume-plugin:latest-$DOCKER_ARCH
+          elif [ -n "$TRAVIS_TAG" ]; then
+            docker tag local-persist:$DOCKER_ARCH $DOCKER_USER/docker-local-persist-volume-plugin:$TRAVIS_TAG-$DOCKER_ARCH
+            docker push $DOCKER_USER/docker-local-persist-volume-plugin:$TRAVIS_TAG-$DOCKER_ARCH
+          fi
+      env:
+        - DOCKER_ARCH=amd64
+        - GOARCH=amd64
 
-before_script:
-  - docker version
-  - make binary-linux-amd64
-  - chmod +x bin/linux/amd64/local-persist
-  - sudo ./bin/linux/amd64/local-persist &
+    - <<: *deploy-stage
+      env:
+        - DOCKER_ARCH=armv6
+        - GOARCH=arm
+        - GOARM=6
 
-script:
-  - ./scripts/integration.sh
-  - make test
+    - <<: *deploy-stage
+      env:
+        - DOCKER_ARCH=armv7
+        - GOARCH=arm
+        - GOARM=7
+
+    - <<: *deploy-stage
+      env:
+        - DOCKER_ARCH=aarch64
+        - GOARCH=arm64
+
+    - stage: manifest
+      script:
+        - |
+          if [ "$TRAVIS_BRANCH" == "master" ]; then
+            TAG="latest"
+          elif [ -n "$TRAVIS_TAG" ]; then
+            TAG="$TRAVIS_TAG"
+          else
+            exit 0
+          fi
+        - IMAGE_PREFIX="$DOCKER_USER/docker-local-persist-volume-plugin"
+        - envsubst < manifest.yml > manifest.yml
+        - echo "$DOCKER_PASSWORD" | docker login --username "${DOCKER_USER}" --password-stdin
+        - curl -fsSL https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64 > ./manifest-tool
+        - chmod +x ./manifest-tool
+        - ./manifest-tool push from-spec manifest.yml
 
 notifications:
   webhooks:
