@@ -26,8 +26,8 @@ jobs:
     - &deploy-stage
       stage: build and deploy
       script:
-        - echo docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$GOARCH --build-arg GOARM=$GOARM .
-        - docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$GOARCH --build-arg GOARM=$GOARM .
+        - echo docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$DOCKER_GOARCH --build-arg GOARM=$DOCKER_GOARM .
+        - docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$DOCKER_GOARCH --build-arg GOARM=$DOCKER_GOARM .
       after_success:
         - |
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USER" --password-stdin
@@ -40,24 +40,24 @@ jobs:
           fi
       env:
         - DOCKER_ARCH=amd64
-        - GOARCH=amd64
+        - DOCKER_GOARCH=amd64
 
     - <<: *deploy-stage
       env:
         - DOCKER_ARCH=arm32v6
-        - GOARCH=arm
-        - GOARM=6
+        - DOCKER_GOARCH=arm
+        - DOCKER_GOARM=6
 
     - <<: *deploy-stage
       env:
         - DOCKER_ARCH=arm32v7
-        - GOARCH=arm
-        - GOARM=7
+        - DOCKER_GOARCH=arm
+        - DOCKER_GOARM=7
 
     - <<: *deploy-stage
       env:
         - DOCKER_ARCH=aarch64
-        - GOARCH=arm64
+        - DOCKER_GOARCH=arm64
 
     - stage: manifest
       if: branch = master OR tag = true
