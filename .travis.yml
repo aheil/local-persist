@@ -60,15 +60,9 @@ jobs:
         - GOARCH=arm64
 
     - stage: manifest
+      if: branch = master OR tag = true
       script:
-        - |
-          if [ "$TRAVIS_BRANCH" == "master" ]; then
-            TAG="latest"
-          elif [ -n "$TRAVIS_TAG" ]; then
-            TAG="$TRAVIS_TAG"
-          else
-            exit 0
-          fi
+        - TAG=${TRAVIS_TAG:-latest}
         - IMAGE_PREFIX="$DOCKER_USER/docker-local-persist-volume-plugin"
         - envsubst < manifest.yml > manifest.yml
         - echo "$DOCKER_PASSWORD" | docker login --username "${DOCKER_USER}" --password-stdin
