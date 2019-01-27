@@ -26,7 +26,6 @@ jobs:
     - &deploy-stage
       stage: build and deploy
       script:
-        - echo docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$DOCKER_GOARCH --build-arg GOARM=$DOCKER_GOARM .
         - docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$DOCKER_GOARCH --build-arg GOARM=$DOCKER_GOARM .
       after_success:
         - |
