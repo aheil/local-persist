@@ -16,7 +16,6 @@ jobs:
       install:
         - glide install -v
       before_script:
-        - docker version
         - make binary-linux-amd64
         - chmod +x bin/linux/amd64/local-persist
         - sudo ./bin/linux/amd64/local-persist &
@@ -27,7 +26,7 @@ jobs:
     - &deploy-stage
       stage: build and deploy
       script:
-        - docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$GO_ARCH --build-arg GOARM=$GOARM .
+        - echo docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$GOARCH --build-arg GOARM=$GOARM .
       after_success:
         - |
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USER" --password-stdin
@@ -44,13 +43,13 @@ jobs:
 
     - <<: *deploy-stage
       env:
-        - DOCKER_ARCH=armv6
+        - DOCKER_ARCH=arm32v6
         - GOARCH=arm
         - GOARM=6
 
     - <<: *deploy-stage
       env:
-        - DOCKER_ARCH=armv7
+        - DOCKER_ARCH=arm32v7
         - GOARCH=arm
         - GOARM=7
 

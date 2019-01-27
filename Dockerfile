@@ -12,9 +12,8 @@ COPY ./ ./
 
 ARG GOOS=linux
 ARG GOARCH=amd64
-ARG GOARM=6
+ARG GOARM
 ENV CGO_ENABLED=0
-ENV GO15VENDOREXPERIMENT=1
 RUN go build -o bin/local-persist -v
 
 RUN mkdir -p /var/lib/docker/plugin-data/
