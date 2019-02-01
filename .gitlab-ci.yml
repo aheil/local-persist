@@ -68,7 +68,7 @@ build-arm64:
     DOCKER_GOARCH: arm64
 
 deploy-manifest:
-  stage: deploy-maifest
+  stage: deploy-manifest
   only:
     - master
     - tags
