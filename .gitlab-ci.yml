@@ -67,7 +67,7 @@ build-arm64:
     DOCKER_ARCH: aarch64
     DOCKER_GOARCH: arm64
 
-build-manifest:
+deploy-manifest:
   stage: deploy-maifest
   only:
     - master
