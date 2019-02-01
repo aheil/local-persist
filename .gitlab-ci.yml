@@ -1,73 +1,84 @@
 stages:
+  - build
   - test
-  - deploy
+  - build-docker
+  - deploy-manifest
 
 variables:
   IMAGE_PATH: ${CI_REGISTRY}/${CI_PROJECT_PATH}
 
-.tests:
+build:
   image: golang:1.5
-  services:
-    - docker:dind
   before_script:
     - curl https://glide.sh/get | sed 's+get TAG https://glide.sh/version+TAG=v0.12.3+' | sh
     - glide install -v
     - make binary-linux-amd64
     - chmod +x bin/linux/amd64/local-persist
-    - sudo ./bin/linux/amd64/local-persist &
+  artifacts:
+    paths:
+      - bin
+
+test:
+  image: docker:dind
+  services:
+    - docker:dind
   script:
-    - ./scripts/integration.sh
+    - apk add --no-cache make
+    - bin/linux/amd64/local-persist &
+    - scripts/integration.sh
     - make test
 
-
-    - <<: *deploy-stage
-      env:
-        - DOCKER_ARCH=arm32v6
-        - DOCKER_GOARCH=arm
-        - DOCKER_GOARM=6
-
-    - <<: *deploy-stage
-      env:
-        - DOCKER_ARCH=arm32v7
-        - DOCKER_GOARCH=arm
-        - DOCKER_GOARM=7
-
-    - <<: *deploy-stage
-      env:
-        - DOCKER_ARCH=aarch64
-        - DOCKER_GOARCH=arm64
-
-
-deploy:
+.build-docker:
   image: docker:latest
   services:
     - docker:dind
-  stage: deploy
+  stage: build-docker
+  only:
+#    refs:
+#      - master
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
     - docker build -t local-persist:$DOCKER_ARCH --build-arg GOARCH=$DOCKER_GOARCH --build-arg GOARM=$DOCKER_GOARM .
-    - |
-      echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USER" --password-stdin
-      if [ "$TRAVIS_BRANCH" == "master" ]; then
-        docker tag local-persist:$DOCKER_ARCH $IMAGE_PATH:latest-$DOCKER_ARCH
-        docker push $IMAGE_PATH:latest-$DOCKER_ARCH
-      elif [ -n "$TRAVIS_TAG" ]; then
-        docker tag local-persist:$DOCKER_ARCH $IMAGE_PATH:$TRAVIS_TAG-$DOCKER_ARCH
-        docker push $IMAGE_PATH:$TRAVIS_TAG-$DOCKER_ARCH
-      fi
+    - docker tag local-persist:$DOCKER_ARCH $IMAGE_PATH:latest-$DOCKER_ARCH
+    - docker push $IMAGE_PATH:latest-$DOCKER_ARCH
+    #- docker tag local-persist:$DOCKER_ARCH $IMAGE_PATH:$TRAVIS_TAG-$DOCKER_ARCH
+    #- docker push $IMAGE_PATH:$TRAVIS_TAG-$DOCKER_ARCH
   variables:
     - DOCKER_ARCH: amd64
     - DOCKER_GOARCH: amd64
 
+build-armv6:
+  extends: .build-docker
+  vairables:
+    DOCKER_ARCH: arm32v6
+    DOCKER_GOARCH: arm
+    DOCKER_GOARM: 6
 
-- stage: manifest
-  if: branch = master OR tag IS present
-deploy-manifest:
-script:
-  - export TAG=${TRAVIS_TAG:-latest}
-  - export IMAGE_PREFIX=$DOCKER_USER/docker-local-persist-volume-plugin
-  - envsubst < manifest.template.yml > manifest.yml
-  - echo "$DOCKER_PASSWORD" | docker login --username "${DOCKER_USER}" --password-stdin
-  - curl -fsSL https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64 > ./manifest-tool
-  - chmod +x ./manifest-tool
-  - ./manifest-tool push from-spec manifest.yml
+build-armv7:
+  extends: .build-docker
+  variables:
+    DOCKER_ARCH: arm32v7
+    DOCKER_GOARCH: arm
+    DOCKER_GOARM: 7
+
+build-arm64:
+  extends: .build-docker
+  variables:
+    DOCKER_ARCH: aarch64
+    DOCKER_GOARCH: arm64
+
+build-manifest:
+  stage: deploy-maifest
+  only:
+    - master
+    - tags
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - export TAG=${CI_COMMIT_TAG:-latest}
+    - envsubst < manifest.template.yml > manifest.yml
+    - curl -fsSL https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64 > ./manifest-tool
+    - chmod +x ./manifest-tool
+    - ./manifest-tool push from-spec manifest.yml

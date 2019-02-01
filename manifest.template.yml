@@ -1,24 +1,24 @@
-image: ${IMAGE_PREFIX}:${TAG}
+image: ${IMAGE_PATH}:${TAG}
 manifests:
   -
-    image: ${IMAGE_PREFIX}:${TAG}-amd64
+    image: ${IMAGE_PATH}:${TAG}-amd64
     platform:
       architecture: amd64
       os: linux
   -
-    image: ${IMAGE_PREFIX}:${TAG}-arm32v6
+    image: ${IMAGE_PATH}:${TAG}-arm32v6
     platform:
       architecture: arm
       variant: v6
       os: linux
   -
-    image: ${IMAGE_PREFIX}:${TAG}-arm32v7
+    image: ${IMAGE_PATH}:${TAG}-arm32v7
     platform:
       architecture: arm
       variant: v7
       os: linux
   -
-    image: ${IMAGE_PREFIX}:${TAG}-aarch64
+    image: ${IMAGE_PATH}:${TAG}-aarch64
     platform:
       architecture: arm64
       variant: v8
