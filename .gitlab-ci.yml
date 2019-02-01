@@ -9,7 +9,7 @@ variables:
 
 build:
   image: golang:1.5
-  before_script:
+  script:
     - curl https://glide.sh/get | sed 's+get TAG https://glide.sh/version+TAG=v0.12.3+' | sh
     - glide install -v
     - make binary-linux-amd64
