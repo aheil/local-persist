@@ -34,6 +34,11 @@ function setenv {
                 ARCH="arm"
                 SUPPORTED=true
             ;;
+            "arm64"|"aarch64")
+                ARCH="arm64"
+                SUPPORTED=true
+            ;;
+
         esac
     elif [[ $OS == 'freebsd' ]]; then
         ARCH=$(uname -m)
@@ -55,7 +60,7 @@ function install-binary {
         (sudo systemctl stop docker-volume-local-persist || true)
     fi
 
-    BINARY_URL="https://github.com/smueller18/local-persist/releases/download/${VERSION}/local-persist-${OS}-${ARCH}"
+    BINARY_URL="https://github.com/aheil/local-persist/releases/download/${VERSION}/local-persist-${OS}-${ARCH}"
     BINARY_DEST="/usr/bin/docker-volume-local-persist"
 
     echo Downloading binary:
@@ -71,7 +76,7 @@ function install-binary {
 
 # Systemd (default)
 function setup-systemd {
-    SYSTEMD_CONFIG_URL="https://raw.githubusercontent.com/smueller18/local-persist/${VERSION}/init/systemd.service"
+    SYSTEMD_CONFIG_URL="https://raw.githubusercontent.com/aheil/local-persist/${VERSION}/init/systemd.service"
     SYSTEMD_CONFIG_DEST="/etc/systemd/system/docker-volume-local-persist.service"
 
     echo Downloading Systemd service conf:
@@ -98,7 +103,7 @@ function start-systemd {
 
 # Upstart
 function setup-upstart {
-    UPSTART_CONFIG_URL="https://raw.githubusercontent.com/smueller18/local-persist/${VERSION}/init/upstart.conf"
+    UPSTART_CONFIG_URL="https://raw.githubusercontent.com/aheil/local-persist/${VERSION}/init/upstart.conf"
     UPSTART_CONFIG_DEST="/etc/init/docker-volume-local-persist.conf"
 
     echo Downloading binary:
